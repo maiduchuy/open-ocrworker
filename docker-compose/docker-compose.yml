@@ -13,7 +13,7 @@ strokewidthtransform:
   dns: ["8.8.8.8"]
   links:
     - rabbitmq
-  command: "/opt/open-ocr/open-ocr-preprocessor -amqp_uri amqp://admin:Phaish9ohbaidei6oole@rabbitmq/ -preprocessor stroke-width-transform"
+  command: "/opt/open-ocr/open-ocr-preprocessor -amqp_uri amqp://admin:Phaish9ohbaidei6oole@rabbitmq/ -preprocessor img-proc"
 
 # Start OCR worker
 openocrworker:
