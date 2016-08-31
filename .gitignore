@@ -6,3 +6,4 @@
 */cli-worker
 */cli-httpd
 .DS_Store
+*/open-ocr-worker
