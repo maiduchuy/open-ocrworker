@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"io/ioutil"
 
 	"github.com/couchbaselabs/logg"
 	"github.com/streadway/amqp"
+	"github.com/mitchellh/goamz/aws"
+  "github.com/mitchellh/goamz/s3"
 )
 
 type OcrRpcWorker struct {
@@ -145,7 +148,12 @@ func (w *OcrRpcWorker) handle(deliveries <-chan amqp.Delivery, done chan error) 
 			logg.LogError(fmt.Errorf(msg, err))
 		}
 
-		logg.LogTo("OCR_WORKER", "Sending rpc response: %v", ocrResult)
+		err := w.uploadToS3(ocrResult.Text)
+		if err != nil {
+			logg.LogError(fmt.Errorf("Error uploading file to s3. Error: %v", err))
+		}
+
+		logg.LogTo("OCR_WORKER", "Sending rpc response: %+v", ocrResult)
 		err = w.sendRpcResponse(ocrResult, d.ReplyTo, d.CorrelationId)
 		if err != nil {
 			msg := "Error returning ocr result: %v.  Error: %v"
@@ -186,6 +194,27 @@ func (w *OcrRpcWorker) resultForDelivery(d amqp.Delivery) (OcrResult, error) {
 	}
 
 	return ocrResult, nil
+
+}
+
+func (w *OcrRpcWorker) uploadToS3(content string) error {
+
+	auth, err := aws.EnvAuth()
+  if err != nil {
+		logg.LogTo("OCR_WORKER", "%v", err)
+		return err
+  }
+  client := s3.New(auth, aws.USWest)
+
+	err := ioutil.WriteFile("/test.txt", content, 0644)
+	if err != nil {
+		logg.LogTo("OCR_WORKER", "%v", err)
+		return err
+	}
+
+	bucket := client.Bucket("avid-documents")
+	err := bucket.Put("/test.txt", bytes.NewBufferString(content), "text/plain")
+	return err
 
 }
 
