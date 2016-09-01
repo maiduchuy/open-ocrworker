@@ -148,7 +148,7 @@ func (w *OcrRpcWorker) handle(deliveries <-chan amqp.Delivery, done chan error) 
 			logg.LogError(fmt.Errorf(msg, err))
 		}
 
-		err := w.uploadToS3(ocrResult.Text)
+		err = w.uploadToS3(ocrResult.Text)
 		if err != nil {
 			logg.LogError(fmt.Errorf("Error uploading file to s3. Error: %v", err))
 		}
@@ -206,14 +206,14 @@ func (w *OcrRpcWorker) uploadToS3(content string) error {
   }
   client := s3.New(auth, aws.USWest)
 
-	err := ioutil.WriteFile("/test.txt", content, 0644)
+	err = ioutil.WriteFile("/test.txt", []byte(content), 0644)
 	if err != nil {
 		logg.LogTo("OCR_WORKER", "%v", err)
 		return err
 	}
 
 	bucket := client.Bucket("avid-documents")
-	err := bucket.Put("/test.txt", bytes.NewBufferString(content), "text/plain")
+	err = bucket.Put("/test.txt", []byte(content), "text/plain", s3.PublicRead)
 	return err
 
 }
