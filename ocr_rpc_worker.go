@@ -204,7 +204,7 @@ func (w *OcrRpcWorker) uploadToS3(content string) error {
 		logg.LogTo("OCR_WORKER", "%v", err)
 		return err
   }
-  client := s3.New(auth, aws.USWest)
+  client := s3.New(auth, aws.USEast)
 
 	err = ioutil.WriteFile("/test.txt", []byte(content), 0644)
 	if err != nil {
