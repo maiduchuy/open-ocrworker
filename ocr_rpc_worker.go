@@ -6,7 +6,7 @@ import (
 	"time"
 	"io/ioutil"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/couchbaselabs/logg"
 	"github.com/streadway/amqp"
@@ -208,7 +208,7 @@ func (w *OcrRpcWorker) uploadToS3(res OcrResult) error {
   }
   client := s3.New(auth, aws.USEast)
 
-	filePath := fmt.Sprintf("%v.pdf", strings.Split(res.BaseFileName, "/")[2])
+	filePath := fmt.Sprintf("%v.pdf", filepath.Base(res.BaseFileName))
 
 	err = ioutil.WriteFile(filePath, []byte(res.Text), 0644)
 	if err != nil {

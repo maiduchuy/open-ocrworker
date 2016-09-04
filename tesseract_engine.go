@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/couchbaselabs/logg"
 )
@@ -100,7 +101,8 @@ func (t TesseractEngine) ProcessRequest(ocrRequest OcrRequest) (OcrResult, error
 		if ocrRequest.ImgUrl != "" {
 			return t.tmpFileFromImageUrl(ocrRequest.ImgUrl)
 		} else {
-			return t.tmpFileFromImageBytes(ocrRequest.ImgBytes)
+			// return t.tmpFileFromImageBytes(ocrRequest.ImgBytes)
+			return "haha", nil
 		}
 
 	}()
@@ -144,13 +146,15 @@ func (t TesseractEngine) tmpFileFromImageBytes(imgBytes []byte) (string, error) 
 
 func (t TesseractEngine) tmpFileFromImageUrl(imgUrl string) (string, error) {
 
-	tmpFileName, err := createTempFileName()
-	if err != nil {
-		return "", err
-	}
+	tmpFileName := func(url string) string {
+		baseName := filepath.Base(imgUrl)
+		extension := filepath.Ext(baseName)
+		baseNameNoExt := url[0:len(baseName)-len(extension)]
+		return filepath.Join(os.TempDir(), baseName)
+	}(imgUrl)
 	// we have to write the contents of the image url to a temp
 	// file, because the leptonica lib can't seem to handle byte arrays
-	err = saveUrlContentToFileName(imgUrl, tmpFileName)
+	err := saveUrlContentToFileName(imgUrl, tmpFileName)
 	if err != nil {
 		return "", err
 	}
@@ -194,7 +198,7 @@ func (t TesseractEngine) processImageFile(inputFilename string, engineArgs Tesse
 
 	return OcrResult{
 		Text: string(outBytes),
-		BaseFileName: tmpOutFileBaseName,
+		BaseFileName: fmt.Sprintf("%v_ocrd", tmpOutFileBaseName),
 	}, nil
 
 }
