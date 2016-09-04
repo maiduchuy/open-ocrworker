@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 	"io/ioutil"
+	"os"
 
 	"github.com/couchbaselabs/logg"
 	"github.com/streadway/amqp"
@@ -148,12 +149,12 @@ func (w *OcrRpcWorker) handle(deliveries <-chan amqp.Delivery, done chan error) 
 			logg.LogError(fmt.Errorf(msg, err))
 		}
 
-		err = w.uploadToS3(ocrResult.Text)
+		err = w.uploadToS3(ocrResult)
 		if err != nil {
 			logg.LogError(fmt.Errorf("Error uploading file to s3. Error: %v", err))
+			break
 		}
 
-		logg.LogTo("OCR_WORKER", "Sending rpc response: %+v", ocrResult)
 		err = w.sendRpcResponse(ocrResult, d.ReplyTo, d.CorrelationId)
 		if err != nil {
 			msg := "Error returning ocr result: %v.  Error: %v"
@@ -197,7 +198,7 @@ func (w *OcrRpcWorker) resultForDelivery(d amqp.Delivery) (OcrResult, error) {
 
 }
 
-func (w *OcrRpcWorker) uploadToS3(content string) error {
+func (w *OcrRpcWorker) uploadToS3(res OcrResult) error {
 
 	auth, err := aws.EnvAuth()
   if err != nil {
@@ -206,14 +207,18 @@ func (w *OcrRpcWorker) uploadToS3(content string) error {
   }
   client := s3.New(auth, aws.USEast)
 
-	err = ioutil.WriteFile("/test.txt", []byte(content), 0644)
+	filePath := "/" + res.BaseFileName + ".pdf"
+
+	err = ioutil.WriteFile(filePath, []byte(res.Text), 0644)
 	if err != nil {
 		logg.LogTo("OCR_WORKER", "%v", err)
 		return err
 	}
 
+	defer os.Remove(filePath)
+
 	bucket := client.Bucket("avid-documents")
-	err = bucket.Put("/test.txt", []byte(content), "text/plain", s3.PublicRead)
+	err = bucket.Put(filePath, []byte(res.Text), "application/pdf", s3.PublicRead)
 	return err
 
 }

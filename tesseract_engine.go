@@ -166,11 +166,11 @@ func (t TesseractEngine) processImageFile(inputFilename string, engineArgs Tesse
 	tmpOutFileBaseName := inputFilename
 
 	// possible file extensions
-	fileExtensions := []string{"txt", "hocr"}
+	fileExtensions := []string{"txt", "hocr", "pdf"}
 
 	// build args array
 	cflags := engineArgs.Export()
-	cmdArgs := []string{inputFilename, tmpOutFileBaseName}
+	cmdArgs := []string{inputFilename, tmpOutFileBaseName, "pdf"}
 	cmdArgs = append(cmdArgs, cflags...)
 	logg.LogTo("OCR_TESSERACT", "cmdArgs: %v", cmdArgs)
 
@@ -194,6 +194,7 @@ func (t TesseractEngine) processImageFile(inputFilename string, engineArgs Tesse
 
 	return OcrResult{
 		Text: string(outBytes),
+		BaseFileName: tmpOutFileBaseName,
 	}, nil
 
 }
