@@ -4,9 +4,10 @@ import "fmt"
 
 type OcrRequest struct {
 	ImgUrl            string                 `json:"img_url"`
-	Name              string                 `json:"img_url"`
+	Name              string                 `json:"name"`
 	EngineType        OcrEngineType          `json:"engine"`
 	ImgBytes          []byte                 `json:"img_bytes"`
+	ImgFiles          [][]byte               `json:"img_files"`
 	PreprocessorChain []string               `json:"preprocessors"`
 	PreprocessorArgs  map[string]interface{} `json:"preprocessor-args"`
 	EngineArgs        map[string]interface{} `json:"engine_args"`
