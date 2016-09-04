@@ -101,8 +101,7 @@ func (t TesseractEngine) ProcessRequest(ocrRequest OcrRequest) (OcrResult, error
 		if ocrRequest.ImgUrl != "" {
 			return t.tmpFileFromImageUrl(ocrRequest.ImgUrl)
 		} else {
-			// return t.tmpFileFromImageBytes(ocrRequest.ImgBytes)
-			return "haha", nil
+			return t.tmpFileFromImageBytes(ocrRequest.ImgBytes, ocrRequest.Name)
 		}
 
 	}()
@@ -126,16 +125,18 @@ func (t TesseractEngine) ProcessRequest(ocrRequest OcrRequest) (OcrResult, error
 
 }
 
-func (t TesseractEngine) tmpFileFromImageBytes(imgBytes []byte) (string, error) {
+func (t TesseractEngine) tmpFileFromImageBytes(imgBytes []byte, name string) (string, error) {
 
-	tmpFileName, err := createTempFileName()
-	if err != nil {
-		return "", err
-	}
+	tmpFileName := func(url string) string {
+		baseName := filepath.Base(url)
+		extension := filepath.Ext(baseName)
+		baseNameNoExt := url[0:len(baseName)-len(extension)]
+		return filepath.Join(os.TempDir(), baseNameNoExt)
+	}(name)
 
 	// we have to write the contents of the image url to a temp
 	// file, because the leptonica lib can't seem to handle byte arrays
-	err = saveBytesToFileName(imgBytes, tmpFileName)
+	err := saveBytesToFileName(imgBytes, tmpFileName)
 	if err != nil {
 		return "", err
 	}
@@ -147,10 +148,10 @@ func (t TesseractEngine) tmpFileFromImageBytes(imgBytes []byte) (string, error) 
 func (t TesseractEngine) tmpFileFromImageUrl(imgUrl string) (string, error) {
 
 	tmpFileName := func(url string) string {
-		baseName := filepath.Base(imgUrl)
+		baseName := filepath.Base(url)
 		extension := filepath.Ext(baseName)
 		baseNameNoExt := url[0:len(baseName)-len(extension)]
-		return filepath.Join(os.TempDir(), baseName)
+		return filepath.Join(os.TempDir(), baseNameNoExt)
 	}(imgUrl)
 	// we have to write the contents of the image url to a temp
 	// file, because the leptonica lib can't seem to handle byte arrays

@@ -90,6 +90,7 @@ func (c *OcrRpcClient) DecodeImage(ocrRequest OcrRequest) (OcrResult, error) {
 	// to have image binary in messages
 	if ocrRequest.ImgBytes == nil {
 		// if we already have image bytes, ignore image url
+		ocrRequest.Name = ocrRequest.ImgUrl
 		err = ocrRequest.downloadImgUrl()
 		if err != nil {
 			logg.LogTo("OCR_CLIENT", "Error downloading img url: %v", err)
